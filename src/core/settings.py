@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    API_URL: str = "api/v1"
     API_KEY: str = "123"
     LOG_LEVEL: str = "error"
     DEBUG: bool = False
