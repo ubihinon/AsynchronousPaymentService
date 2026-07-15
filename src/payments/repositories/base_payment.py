@@ -14,7 +14,7 @@ class BasePaymentRepository(ABC):
     @abstractmethod
     async def create(
         self, price: decimal.Decimal, currency: str,  description: str, meta_data: dict, webhook_url: str,
-        idempotency_key: str
+        idempotency_key: str, request_payload_hash: str
     ) -> PaymentReadSchema:
         pass
 
@@ -23,5 +23,13 @@ class BasePaymentRepository(ABC):
         pass
 
     @abstractmethod
+    async def update_response_data(self, payment_id: uuid.UUID, response_data: dict) -> PaymentReadSchema | None:
+        pass
+
+    @abstractmethod
     async def get_by_idempotency_key(self, idempotency_key: str) -> PaymentReadSchema | None:
+        pass
+
+    @abstractmethod
+    async def get(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
         pass

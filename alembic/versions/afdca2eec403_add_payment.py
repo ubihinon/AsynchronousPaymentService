@@ -1,8 +1,8 @@
 """add payment
 
-Revision ID: 115d62b1aad8
+Revision ID: afdca2eec403
 Revises: 
-Create Date: 2026-07-13 16:29:31.017413
+Create Date: 2026-07-14 13:55:52.005073
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '115d62b1aad8'
+revision: str = 'afdca2eec403'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -30,6 +30,7 @@ def upgrade() -> None:
     sa.Column('idempotency_key', sa.String(length=255), nullable=False),
     sa.Column('webhook_url', sa.String(length=2048), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('handled_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_payments_currency'), 'payments', ['currency'], unique=False)

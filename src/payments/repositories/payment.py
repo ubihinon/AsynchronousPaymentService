@@ -3,8 +3,8 @@ import decimal
 import uuid
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from payments.constants import CurrencyEnum
 from payments.dtos.payment import PaymentReadSchema
 from payments.models.payment import Payment
 from payments.repositories.base_payment import BasePaymentRepository
@@ -12,14 +12,17 @@ from payments.repositories.base_payment import BasePaymentRepository
 
 class PaymentRepository(BasePaymentRepository):
     async def create(
-        self, price: decimal.Decimal, currency: str,  description: str, meta_data: dict, webhook_url: str
+        self, price: decimal.Decimal, currency: str, description: str, meta_data: dict, webhook_url: str,
+        idempotency_key: str, request_payload_hash: str
     ) -> PaymentReadSchema:
         payment_record = Payment(
             price=price,
-            currency=currency,
+            currency=CurrencyEnum.USD,
             description=description,
             meta_data=meta_data,
             webhook_url=webhook_url,
+            idempotency_key=idempotency_key,
+            request_payload_hash=request_payload_hash,
         )
         self.session.add(payment_record)
         await self.session.commit()
@@ -39,9 +42,33 @@ class PaymentRepository(BasePaymentRepository):
 
         return PaymentReadSchema.model_validate(payment_record)
 
+    async def update_response_data(self, payment_id: uuid.UUID, response_data: dict) -> PaymentReadSchema | None:
+        query = select(Payment).where(Payment.id == payment_id)
+        result = await self.session.execute(query)
+        payment_record = result.scalar_one_or_none()
+
+        if payment_record is None:
+            return None
+
+        payment_record.response_data = response_data
+        await self.session.commit()
+        await self.session.refresh(payment_record)
+
+        return PaymentReadSchema.model_validate(payment_record)
+
     async def get_by_idempotency_key(self, idempotency_key: str) -> PaymentReadSchema | None:
         query = select(Payment).where(
             Payment.idempotency_key == idempotency_key
+        )
+        result = await self.session.execute(query)
+        payment_record = result.scalar_one_or_none()
+
+        return PaymentReadSchema.model_validate(payment_record) if payment_record else None
+
+
+    async def get(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
+        query = select(Payment).where(
+            Payment.id == payment_id
         )
         result = await self.session.execute(query)
         payment_record = result.scalar_one_or_none()
