@@ -26,21 +26,38 @@ class PaymentRepository(BasePaymentRepository):
         )
         self.session.add(payment_record)
         await self.session.flush()
+
         return PaymentReadSchema.model_validate(payment_record)
 
-    async def update(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
-        query = select(Payment).where(Payment.id == payment_id)
+
+    async def update(self, payment_schema: PaymentReadSchema) -> PaymentReadSchema | None:
+        query = select(Payment).where(Payment.id == payment_schema.id)
         result = await self.session.execute(query)
         payment_record = result.scalar_one_or_none()
 
         if payment_record is None:
             return None
 
-        payment_record.handled_at = datetime.datetime.now(datetime.UTC)
+        payment_record.status = payment_schema.status
+        payment_record.handled_at = payment_schema.handled_at
+
         await self.session.flush()
         await self.session.refresh(payment_record)
 
         return PaymentReadSchema.model_validate(payment_record)
+
+    # async def update(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
+    #     query = select(Payment).where(Payment.id == payment_id)
+    #     result = await self.session.execute(query)
+    #     payment_record = result.scalar_one_or_none()
+    #
+    #     if payment_record is None:
+    #         return None
+    #
+    #     await self.session.flush()
+    #     await self.session.refresh(payment_record)
+    #
+    #     return PaymentReadSchema.model_validate(payment_record)
 
     async def update_response_data(self, payment_id: uuid.UUID, response_data: dict) -> PaymentReadSchema | None:
         query = select(Payment).where(Payment.id == payment_id)

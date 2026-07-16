@@ -16,7 +16,6 @@ async def process_outbox():
     await broker.connect()
 
     logger.info("Outbox worker started")
-    logger.debug("Outbox worker started DEBUG")
     while True:
         await asyncio.sleep(1)
         async with async_session() as session:

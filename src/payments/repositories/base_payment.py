@@ -19,7 +19,8 @@ class BasePaymentRepository(ABC):
         pass
 
     @abstractmethod
-    async def update(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
+    # async def update(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
+    async def update(self, payment_schema: PaymentReadSchema) -> PaymentReadSchema | None:
         pass
 
     @abstractmethod

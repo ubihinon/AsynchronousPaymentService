@@ -77,6 +77,9 @@ services:
     build: .
     working_dir: /app
     container_name: payment_service_outbox_worker
+    volumes:
+      - .:/app
+      - /app/.venv
     command: python src/payments/outbox_worker.py
     environment:
       - VIRTUAL_ENV=/app/.venv
@@ -102,37 +105,37 @@ services:
     networks:
       - api_network
 
-#  consumer:
-#    build: .
-#    working_dir: /app
-#    container_name: payment_service_consumer
-#    volumes:
-#      - .:/app
-#      - /app/.venv
-#    environment:
-#      - VIRTUAL_ENV=/app/.venv
-#      - PATH=/app/.venv/bin:/usr/local/bin:/usr/bin:/bin
-#      - ENV_FILE=.env
-#      - PYTHONPATH=${PYTHONPATH:-/app/src}
-#      - DATABASE_URL=${DATABASE_URL}
-#      - SYNC_DATABASE_URL=${SYNC_DATABASE_URL}
-#      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
-#      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
-#      - DEBUG=${DEBUG:-true}
-#      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-#      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
-#      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
-#      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
-#      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
-#    depends_on:
-#      rabbitmq:
-#        condition: service_healthy
-#      postgres:
-#        condition: service_healthy
-#    command: faststream run payments.consumer:app
-#    restart: unless-stopped
-#    networks:
-#      - api_network
+  consumer:
+    build: .
+    working_dir: /app
+    container_name: payment_service_consumer
+    volumes:
+      - .:/app
+      - /app/.venv
+    environment:
+      - VIRTUAL_ENV=/app/.venv
+      - PATH=/app/.venv/bin:/usr/local/bin:/usr/bin:/bin
+      - ENV_FILE=.env
+      - PYTHONPATH=${PYTHONPATH:-/app/src}
+      - DATABASE_URL=${DATABASE_URL}
+      - SYNC_DATABASE_URL=${SYNC_DATABASE_URL}
+      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - DEBUG=${DEBUG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    command: faststream run payments.consumer:app
+    restart: unless-stopped
+    networks:
+      - api_network
 
 volumes:
   postgres_data:

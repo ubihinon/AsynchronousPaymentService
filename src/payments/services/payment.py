@@ -3,7 +3,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from payments.api.utils import hash_request_payload
+from payments.utils import hash_request_payload
 from payments.dtos.payment import PaymentReadSchema
 from payments.exceptions import IdempotencyKeyException
 from payments.repositories.base_outbox import BaseOutboxRepository
@@ -73,3 +73,15 @@ class PaymentService:
     async def get_by_idempotency_key(self, idempotency_key: str):
         payment = await self.payment_repository.get_by_idempotency_key(idempotency_key)
         return payment
+
+    async def update(self, payment_schema: PaymentReadSchema) -> PaymentReadSchema | None:
+        try:
+            payment = await self.payment_repository.update(payment_schema)
+
+            await self.session.commit()
+
+            return payment
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(e)
+            raise

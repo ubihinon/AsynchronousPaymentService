@@ -3,10 +3,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database import get_session
-from payments.api.utils import hash_request_payload
 from payments.dependencies import get_payment_service
 from payments.exceptions import IdempotencyKeyException
 from payments.schemas.requests import PaymentCreateRequestSchema

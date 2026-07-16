@@ -26,6 +26,10 @@ class Settings(BaseSettings):
 
     OUTBOX_LIMIT: int = 10
 
+    WEBHOOK_RETRY_ATTEMPTS: int = 3
+    WEBHOOK_TIMEOUT_SECONDS: int | float = 5
+    WEBHOOK_RETRY_DELAY_SECONDS: int | float = 5
+
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
