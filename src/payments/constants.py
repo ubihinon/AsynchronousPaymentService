@@ -10,3 +10,5 @@ class PaymentStatus(str, enum.Enum):
     PENDING = "PENDING"
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
+
+PAYMENTS_QUEUE = "payments.new"

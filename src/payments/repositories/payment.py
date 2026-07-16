@@ -25,7 +25,7 @@ class PaymentRepository(BasePaymentRepository):
             request_payload_hash=request_payload_hash,
         )
         self.session.add(payment_record)
-        await self.session.commit()
+        await self.session.flush()
         return PaymentReadSchema.model_validate(payment_record)
 
     async def update(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
@@ -37,7 +37,7 @@ class PaymentRepository(BasePaymentRepository):
             return None
 
         payment_record.handled_at = datetime.datetime.now(datetime.UTC)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(payment_record)
 
         return PaymentReadSchema.model_validate(payment_record)
@@ -51,7 +51,7 @@ class PaymentRepository(BasePaymentRepository):
             return None
 
         payment_record.response_data = response_data
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(payment_record)
 
         return PaymentReadSchema.model_validate(payment_record)
