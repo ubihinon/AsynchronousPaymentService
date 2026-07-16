@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "error"
     DEBUG: bool = False
 
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_DB: str = "payment_service_db"
+    POSTGRES_HOST: str = "postgres"
+    POSTGRES_PORT: int = 5432
+
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@0.0.0.0:5432/postgres"
     SYNC_DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@0.0.0.0:5432/postgres"
 
@@ -17,6 +23,8 @@ class Settings(BaseSettings):
     RABBITMQ_USER: str = "guest"
     RABBITMQ_PASS: str = "guest"
     RABBITMQ_URL: str = f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/"
+
+    OUTBOX_LIMIT: int = 10
 
     HOST: str = "0.0.0.0"
     PORT: int = 8000

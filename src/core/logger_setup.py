@@ -1,13 +1,8 @@
 import logging
 import logging.config
-
-from core.settings import settings
-import logging
 import logging.config
 
 from core.settings import settings
-
-logger = logging.getLogger(__name__)
 
 
 def setup_logging():
@@ -19,4 +14,6 @@ def setup_logging():
     console_handler.setFormatter(console_formatter)
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
+    root_logger.setLevel(settings.LOG_LEVEL)
+    root_logger.addHandler(console_handler)
+    logging.basicConfig(level=settings.LOG_LEVEL)

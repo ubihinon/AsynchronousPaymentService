@@ -4,10 +4,13 @@ import logging
 from faststream.rabbit import RabbitBroker
 
 from core.database import async_session
+from core.logger_setup import setup_logging
 from core.settings import settings
 from payments.repositories import OutboxRepository
+from payments.services.outbox import OutboxService
 
-logging.basicConfig(level=logging.INFO)
+setup_logging()
+# logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -16,34 +19,14 @@ async def process_outbox():
     await broker.connect()
 
     logger.info("Outbox worker started")
+    logger.debug("Outbox worker started DEBUG")
     while True:
-        logger.info("Outbox worker started")
         await asyncio.sleep(1)
         async with async_session() as session:
-            outbox_repository = OutboxRepository(session)
-            # Select unprocessed events
-            # stmt = select(Outbox).where(Outbox.processed == False).limit(10)
-            # result = await session.execute(stmt)
-            # events = result.scalars().all()
-            outbox = await outbox_repository.get_new()
-            print()
-            # for event in events:
-            #     try:
-            #         # Publish to RabbitMQ
-            #         await broker.publish(
-            #             message=event.payload,
-            #             queue="payments.new",
-            #         )
-            #
-            #         # Mark as processed
-            #         event.processed = True
-            #         logger.info(f"Published event {event.id} to RabbitMQ")
-            #     except Exception as e:
-            #         logger.error(f"Failed to publish event {event.id}: {e}")
+            outbox_service = OutboxService(session, OutboxRepository(session))
+            await outbox_service.send_new_events()
 
-            await session.commit()
-
-        await asyncio.sleep(1)  # Polling interval
+        await asyncio.sleep(1)
 
 
 if __name__ == "__main__":

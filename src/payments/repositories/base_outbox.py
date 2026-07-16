@@ -1,4 +1,6 @@
+import uuid
 from abc import ABC, abstractmethod
+from typing import List
 
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,4 +14,12 @@ class BaseOutboxRepository(ABC):
 
     @abstractmethod
     async def create(self, schema: BaseModel) -> OutboxReadSchema:
+        pass
+
+    @abstractmethod
+    async def get_new(self) -> List[OutboxReadSchema]:
+        pass
+
+    @abstractmethod
+    async def update_processed_at(self, outbox_id: uuid.UUID) -> OutboxReadSchema:
         pass

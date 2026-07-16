@@ -1,12 +1,9 @@
-import decimal
 import logging
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.broker import broker
 from payments.api.utils import hash_request_payload
-from payments.constants import PAYMENTS_QUEUE
 from payments.dtos.payment import PaymentReadSchema
 from payments.exceptions import IdempotencyKeyException
 from payments.repositories.base_outbox import BaseOutboxRepository
@@ -48,11 +45,6 @@ class PaymentService:
             )
 
             outbox = await self.outbox_repository.create(payment)
-
-            # res = await broker.publish(
-            #     payment,
-            #     queue=PAYMENTS_QUEUE
-            # )
 
             response_data = PaymentResponseSchema.model_validate({
                 "payment_id": payment.id,
