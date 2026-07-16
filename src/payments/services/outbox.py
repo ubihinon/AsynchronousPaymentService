@@ -15,17 +15,22 @@ class OutboxService:
         self.repository = repository
 
     async def send_new_events(self):
-        events = await self.repository.get_new()
-        for event in events:
-            try:
-                await broker.publish(
-                    message=event.payload,
-                    queue=PAYMENTS_QUEUE,
-                )
+        try:
+            events = await self.repository.get_new()
+            for event in events:
+                try:
+                    await broker.publish(
+                        message=event.payload,
+                        queue=PAYMENTS_QUEUE,
+                    )
 
-                await self.repository.update_processed_at(event.id)
-                logger.info(f"Published event {event.id} to RabbitMQ")
-            except Exception as e:
-                logger.error(f"Failed to publish event {event.id}: {e}")
+                    await self.repository.update_processed_at(event.id)
+                    logger.info(f"Published event {event.id} to RabbitMQ")
+                except Exception as e:
+                    logger.error(f"Failed to publish event {event.id}: {e}")
 
-        await self.session.commit()
+            await self.session.commit()
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(e)
+            raise

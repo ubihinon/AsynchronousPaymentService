@@ -44,7 +44,7 @@ class PaymentService:
                 request_payload_hash
             )
 
-            outbox = await self.outbox_repository.create(payment)
+            await self.outbox_repository.create(payment)
 
             response_data = PaymentResponseSchema.model_validate({
                 "payment_id": payment.id,
@@ -53,7 +53,7 @@ class PaymentService:
             })
 
             payment_updated = await self.payment_repository.update_response_data(
-                payment.id, response_data.model_dump(mode='json')
+                payment.id, response_data.model_dump(mode="json")
             )
 
             await self.session.commit()

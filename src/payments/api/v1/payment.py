@@ -2,6 +2,7 @@ import logging
 import uuid
 from typing import Annotated
 
+from asyncpg import NumericValueOutOfRangeError
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from payments.dependencies import get_payment_service
@@ -39,6 +40,11 @@ async def create_payment(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=e.message
+        )
+    except NumericValueOutOfRangeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Amount must be between less than 99999999.99"
         )
     except Exception as e:
         logger.exception(f"Exception: {e}")

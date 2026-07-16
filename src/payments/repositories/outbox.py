@@ -23,7 +23,7 @@ class OutboxRepository(BaseOutboxRepository):
             event_type=PAYMENTS_QUEUE,
             aggregate_type="Payment",
             aggregate_id=payment_schema.id,
-            payload=payment_schema.model_dump(mode='json')
+            payload=payment_schema.model_dump(mode="json")
         )
         self.session.add(outbox_record)
         await self.session.flush()
