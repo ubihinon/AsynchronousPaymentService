@@ -73,6 +73,21 @@ services:
     networks:
       - api_network
 
+  outbox_worker:
+    build: .
+    command: python src/payments/outbox_worker.py
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   consumer:
     build: .
     working_dir: /app
