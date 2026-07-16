@@ -1,21 +1,18 @@
 import asyncio
 import logging
 
-from faststream.rabbit import RabbitBroker
-
+from core.broker import broker
 from core.database import async_session
 from core.logger_setup import setup_logging
-from core.settings import settings
 from payments.repositories import OutboxRepository
 from payments.services.outbox import OutboxService
 
 setup_logging()
-# logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 
 async def process_outbox():
-    broker = RabbitBroker(settings.RABBITMQ_URL)
     await broker.connect()
 
     logger.info("Outbox worker started")
