@@ -34,7 +34,7 @@ class PaymentService:
             return existing_payment, False
 
         try:
-            payment = await self.payment_repository.create(
+            payment_orm = await self.payment_repository.create(
                 request_data.price,
                 request_data.currency,
                 request_data.description,
@@ -43,6 +43,7 @@ class PaymentService:
                 idempotency_key,
                 request_payload_hash
             )
+            payment = PaymentReadSchema.model_validate(payment_orm)
 
             await self.outbox_repository.create(payment)
 
@@ -52,35 +53,35 @@ class PaymentService:
                 "created_at": payment.created_at
             })
 
-            payment_updated = await self.payment_repository.update_response_data(
+            payment_updated_orm = await self.payment_repository.update_response_data(
                 payment.id, response_data.model_dump(mode="json")
             )
 
             await self.session.commit()
 
-            if payment_updated:
-                return payment_updated, True
+            if payment_updated_orm:
+                return PaymentReadSchema.model_validate(payment_updated_orm), True
             return payment, True
         except Exception as e:
             await self.session.rollback()
             logger.error(e)
             raise
 
-    async def get(self, payment_id: uuid.UUID):
-        payment = await self.payment_repository.get(payment_id)
-        return payment
+    async def get(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
+        payment_orm = await self.payment_repository.get(payment_id)
+        return PaymentReadSchema.model_validate(payment_orm) if payment_orm else None
 
-    async def get_by_idempotency_key(self, idempotency_key: str):
-        payment = await self.payment_repository.get_by_idempotency_key(idempotency_key)
-        return payment
+    async def get_by_idempotency_key(self, idempotency_key: str) -> PaymentReadSchema | None:
+        payment_orm = await self.payment_repository.get_by_idempotency_key(idempotency_key)
+        return PaymentReadSchema.model_validate(payment_orm) if payment_orm else None
 
     async def update(self, payment_schema: PaymentReadSchema) -> PaymentReadSchema | None:
         try:
-            payment = await self.payment_repository.update(payment_schema)
+            payment_orm = await self.payment_repository.update(payment_schema)
 
             await self.session.commit()
 
-            return payment
+            return PaymentReadSchema.model_validate(payment_orm) if payment_orm else None
         except Exception as e:
             await self.session.rollback()
             logger.error(e)
