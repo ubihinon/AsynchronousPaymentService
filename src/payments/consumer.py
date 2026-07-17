@@ -8,9 +8,9 @@ from faststream.rabbit import RabbitMessage
 
 from core.broker import broker
 from core.database import async_session
-from core.rabbitmq.events import payment_dlx, payment_exchange, payment_retry_exchange
+from core.rabbitmq.events import payment_dlx, payment_exchange
 from core.logger_setup import setup_logging
-from core.rabbitmq.queues import payment_retry_10s_queue, payments_dead_queue, payments_queue
+from core.rabbitmq.queues import payments_dead_queue, payments_queue
 from payments.constants import PAYMENTS_QUEUE, PaymentStatus
 from payments.dtos.payment import PaymentReadSchema
 from payments.repositories import OutboxRepository, PaymentRepository
@@ -24,13 +24,6 @@ logger = logging.getLogger(__name__)
 app = FastStream(broker)
 
 MAX_RETRIES = 3
-
-
-@app.after_startup
-async def declare_retry_infrastructure():
-    retry_exchange = await broker.declare_exchange(payment_retry_exchange)
-    retry_queue = await broker.declare_queue(payment_retry_10s_queue)
-    await retry_queue.bind(retry_exchange, routing_key="payment.events.retry.3s")
 
 
 @broker.subscriber(

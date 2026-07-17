@@ -15,9 +15,10 @@ setup_logging()
 async def lifespan(app: FastAPI):
     await broker.start()
 
+    retry_exchange = await broker.declare_exchange(payment_retry_exchange)
+    retry_queue = await broker.declare_queue(payment_retry_10s_queue)
+    await retry_queue.bind(retry_exchange, routing_key="payment.events.retry.3s")
     await broker.declare_exchange(payment_exchange)
-    await broker.declare_queue(payment_retry_10s_queue)
-    await broker.declare_exchange(payment_retry_exchange)
     await broker.declare_exchange(payment_dlx)
 
     yield
