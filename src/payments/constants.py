@@ -13,5 +13,5 @@ class PaymentStatus(str, enum.Enum):
 
 PAYMENTS_QUEUE = "payments.new"
 ROUTING_KEY_PAYMENT_CREATED = "payment.created"
-ROUTING_KEY_PAYMENT_RETRY = "payment.retry"
+PAYMENT_RETRY_ROUTING_KEYS = ["payment.retry.1", "payment.retry.2", "payment.retry.3"]
 ROUTING_KEY_PAYMENT_FAILED = "payment.failed"

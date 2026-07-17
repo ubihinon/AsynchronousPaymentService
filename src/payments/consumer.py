@@ -8,10 +8,11 @@ from faststream.rabbit import RabbitMessage
 
 from core.broker import broker
 from core.database import async_session
-from core.rabbitmq.events import payment_dlx, payment_exchange
+from core.settings import settings
+from core.rabbitmq.events import payment_dlx, payment_exchange, payment_retry_exchange
 from core.logger_setup import setup_logging
 from core.rabbitmq.queues import payment_dead_queue, payments_queue
-from payments.constants import PAYMENTS_QUEUE, ROUTING_KEY_PAYMENT_FAILED, PaymentStatus
+from payments.constants import PAYMENT_RETRY_ROUTING_KEYS, ROUTING_KEY_PAYMENT_FAILED, PaymentStatus
 from payments.dtos.payment import PaymentReadSchema
 from payments.repositories import OutboxRepository, PaymentRepository
 from payments.services.payment import PaymentService
@@ -22,8 +23,6 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 app = FastStream(broker)
-
-MAX_RETRIES = 3
 
 
 @broker.subscriber(
@@ -67,9 +66,11 @@ async def handle_payment(payload: PaymentReadSchema, msg: RabbitMessage):
 
     except Exception as e:
         retries = get_retry_count(msg)
-        logger.error(f"Payment {payload.id} failed (attempt {retries + 1}/{MAX_RETRIES + 1}). Error: {e}")
+        logger.error(
+            f"Payment {payload.id} failed (attempt {retries + 1}/{settings.RABBITMQ_MAX_RETRIES + 1}). Error: {e}"
+        )
 
-        if retries >= MAX_RETRIES:
+        if retries >= settings.RABBITMQ_MAX_RETRIES:
             logger.error(f"Payment {payload.id} exceeded max retries, sending to DLQ")
             await broker.publish(
                 payload,
@@ -77,18 +78,19 @@ async def handle_payment(payload: PaymentReadSchema, msg: RabbitMessage):
                 routing_key=ROUTING_KEY_PAYMENT_FAILED,
                 headers={"x-error": str(e), "x-failed-at": datetime.datetime.now().isoformat()}
             )
-            await msg.ack()
         else:
-            await msg.nack(requeue=False)
+            await broker.publish(
+                payload,
+                exchange=payment_retry_exchange,
+                routing_key=PAYMENT_RETRY_ROUTING_KEYS[retries],
+                headers={"x-retry-count": retries + 1},
+            )
+        await msg.ack()
 
 
 def get_retry_count(msg: RabbitMessage) -> int:
     headers = msg.headers or {}
-    deaths = headers.get("x-death", [])
-    for death in deaths:
-        if death.get("queue") == PAYMENTS_QUEUE:
-            return death.get("count", 0)
-    return 0
+    return int(headers.get("x-retry-count", 0))
 
 
 @broker.subscriber(
@@ -97,3 +99,14 @@ def get_retry_count(msg: RabbitMessage) -> int:
 )
 async def process_dead_message(payload: PaymentReadSchema):
     logger.error(f"Dead letter received for payment {payload.id}: {payload}")
+
+    if payload.status == PaymentStatus.PENDING:
+        async with async_session() as session:
+            payment_service = PaymentService(
+                session,
+                payment_repository=PaymentRepository(session),
+                outbox_repository=OutboxRepository(session),
+            )
+            payload.status = PaymentStatus.FAILED
+            payload.handled_at = datetime.datetime.now(datetime.UTC)
+            await payment_service.update(payload)
