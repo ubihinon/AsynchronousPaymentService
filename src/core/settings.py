@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     OUTBOX_LIMIT: int = 10
 
-    RABBITMQ_MAX_RETRIES = 3
+    RABBITMQ_MAX_RETRIES: int = 3
 
     WEBHOOK_RETRY_ATTEMPTS: int = 3
     WEBHOOK_TIMEOUT_SECONDS: int | float = 5

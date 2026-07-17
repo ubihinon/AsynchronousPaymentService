@@ -46,19 +46,6 @@ class PaymentRepository(BasePaymentRepository):
 
         return PaymentReadSchema.model_validate(payment_record)
 
-    # async def update(self, payment_id: uuid.UUID) -> PaymentReadSchema | None:
-    #     query = select(Payment).where(Payment.id == payment_id)
-    #     result = await self.session.execute(query)
-    #     payment_record = result.scalar_one_or_none()
-    #
-    #     if payment_record is None:
-    #         return None
-    #
-    #     await self.session.flush()
-    #     await self.session.refresh(payment_record)
-    #
-    #     return PaymentReadSchema.model_validate(payment_record)
-
     async def update_response_data(self, payment_id: uuid.UUID, response_data: dict) -> PaymentReadSchema | None:
         query = select(Payment).where(Payment.id == payment_id)
         result = await self.session.execute(query)

@@ -102,7 +102,9 @@ Exchanges:
 
 Queues:
 - payments.new — основная очередь платежей
-- payment.retry — очередь retry с TTL 3s
+- payment.retry.1 — первый retry, TTL 3s
+- payment.retry.2 — второй retry, TTL 9s
+- payment.retry.3 — третий retry, TTL 27s
 - payment.failed — dead letter queue
 
 ---

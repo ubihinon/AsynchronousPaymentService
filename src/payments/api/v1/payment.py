@@ -70,7 +70,11 @@ async def get_payment(
 ) -> PaymentGetResponseSchema:
     try:
         payment = await payment_service.get(payment_id)
+        if payment is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
         return PaymentGetResponseSchema.model_validate(payment)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Exception: {e}")
         raise HTTPException(
