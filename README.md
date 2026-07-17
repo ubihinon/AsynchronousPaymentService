@@ -87,30 +87,6 @@
 - **Alembic** — миграции
 - **Outbox pattern** — гарантированная доставка событий в брокер
 
-### Архитектура
-
-```
-Client
-  |
-  v
-POST /api/v1/payments
-  |
-  v
-FastAPI --> PostgreSQL (payments + outbox)
-                |
-                v
-          Outbox Worker (polling каждые ~1s)
-                |
-                v
-          RabbitMQ: payment.events --> payments.new
-                |
-                v
-          Consumer
-          |-- success --> обновляет статус + отправляет webhook
-          `-- failure --> retry (3s delay, до 3 раз)
-                              `-- max retries --> payment.failed (DLQ)
-```
-
 ### Процессы
 
 - "api" — "uvicorn core.main:app" — REST API, принимает запросы
