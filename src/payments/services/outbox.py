@@ -3,7 +3,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.broker import broker
-from payments.constants import PAYMENTS_QUEUE
+from core.rabbitmq.events import payment_exchange
 from payments.repositories.base_outbox import BaseOutboxRepository
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,9 @@ class OutboxService:
                 try:
                     await broker.publish(
                         message=event.payload,
-                        queue=PAYMENTS_QUEUE,
+                        exchange=payment_exchange,
+                        routing_key=event.event_type,
+                        persist=True,
                     )
 
                     await self.repository.update_processed_at(event.id)

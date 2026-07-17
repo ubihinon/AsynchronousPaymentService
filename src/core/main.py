@@ -1,24 +1,29 @@
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from core.broker import broker
+from core.rabbitmq import payment_retry_10s_queue
+from core.rabbitmq.events import payment_dlx, payment_exchange, payment_retry_exchange
 from core.logger_setup import setup_logging
 from payments.api import router as payments_router
-logger = logging.getLogger(__name__)
-
 
 setup_logging()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await broker.start()
 
+    await broker.declare_exchange(payment_exchange)
+    await broker.declare_queue(payment_retry_10s_queue)
+    await broker.declare_exchange(payment_retry_exchange)
+    await broker.declare_exchange(payment_dlx)
+
     yield
 
     await broker.stop()
-# alembic revision --autogenerate -m "add payment"
+
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(payments_router)

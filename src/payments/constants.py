@@ -12,3 +12,4 @@ class PaymentStatus(str, enum.Enum):
     FAILED = "FAILED"
 
 PAYMENTS_QUEUE = "payments.new"
+PAYMENTS_EVENT = "payment.created"

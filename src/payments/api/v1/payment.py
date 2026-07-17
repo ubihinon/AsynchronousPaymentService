@@ -5,7 +5,7 @@ from typing import Annotated
 from asyncpg import NumericValueOutOfRangeError
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
-from payments.dependencies import get_payment_service
+from payments.dependencies import get_payment_service, verify_api_key
 from payments.exceptions import IdempotencyKeyException
 from payments.schemas.requests import PaymentCreateRequestSchema
 from payments.schemas.responses import PaymentGetResponseSchema, PaymentResponseSchema
@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
 
-@router.post("", status_code=status.HTTP_202_ACCEPTED, response_model=PaymentResponseSchema)
+@router.post(
+    "", status_code=status.HTTP_202_ACCEPTED,
+    response_model=PaymentResponseSchema,
+    dependencies=[Depends(verify_api_key)],
+)
 async def create_payment(
     request_data: PaymentCreateRequestSchema,
     payment_service: Annotated[PaymentService, Depends(get_payment_service)],
@@ -54,7 +58,12 @@ async def create_payment(
         )
 
 
-@router.get("/{payment_id}", status_code=status.HTTP_200_OK, response_model=PaymentGetResponseSchema)
+@router.get(
+    "/{payment_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=PaymentGetResponseSchema,
+    dependencies=[Depends(verify_api_key)],
+)
 async def get_payment(
     payment_id: uuid.UUID,
     payment_service: Annotated[PaymentService, Depends(get_payment_service)],
