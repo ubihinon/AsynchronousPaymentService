@@ -13,7 +13,7 @@ from core.rabbitmq.events import payment_dlx, payment_exchange, payment_retry_ex
 from core.logger_setup import setup_logging
 from core.rabbitmq.queues import payment_dead_queue, payments_queue
 from payments.constants import PAYMENT_RETRY_ROUTING_KEYS, ROUTING_KEY_PAYMENT_FAILED, PaymentStatus
-from payments.dtos.payment import PaymentReadSchema
+from payments.dtos.payment import PaymentMessageSchema
 from payments.repositories import OutboxRepository, PaymentRepository
 from payments.services.payment import PaymentService
 from payments.utils import send_webhook_with_retry
@@ -30,7 +30,7 @@ app = FastStream(broker)
     exchange=payment_exchange,
     ack_policy=AckPolicy.MANUAL,
 )
-async def handle_payment(payload: PaymentReadSchema, msg: RabbitMessage):
+async def handle_payment(payload: PaymentMessageSchema, msg: RabbitMessage):
     try:
         logger.info(f"Processing payment with id {payload.id}")
 
@@ -97,7 +97,7 @@ def get_retry_count(msg: RabbitMessage) -> int:
     queue=payment_dead_queue,
     exchange=payment_dlx,
 )
-async def process_dead_message(payload: PaymentReadSchema):
+async def process_dead_message(payload: PaymentMessageSchema):
     logger.error(f"Dead letter received for payment {payload.id}: {payload}")
 
     if payload.status == PaymentStatus.PENDING:

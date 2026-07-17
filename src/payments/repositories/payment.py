@@ -1,34 +1,30 @@
-import decimal
 import uuid
 
 from sqlalchemy import select
 
 from payments.constants import CurrencyEnum
-from payments.dtos.payment import PaymentReadSchema
+from payments.dtos.payment import PaymentCreateDTO, PaymentMessageSchema
 from payments.models.payment import Payment
 from payments.repositories.base_payment import BasePaymentRepository
 
 
 class PaymentRepository(BasePaymentRepository):
-    async def create(
-        self, price: decimal.Decimal, currency: str, description: str, meta_data: dict, webhook_url: str,
-        idempotency_key: str, request_payload_hash: str
-    ) -> Payment:
+    async def create(self, dto: PaymentCreateDTO) -> Payment:
         payment_record = Payment(
-            price=price,
-            currency=CurrencyEnum(currency),
-            description=description,
-            meta_data=meta_data,
-            webhook_url=webhook_url,
-            idempotency_key=idempotency_key,
-            request_payload_hash=request_payload_hash,
+            price=dto.price,
+            currency=CurrencyEnum(dto.currency),
+            description=dto.description,
+            meta_data=dto.meta_data,
+            webhook_url=dto.webhook_url,
+            idempotency_key=dto.idempotency_key,
+            request_payload_hash=dto.request_payload_hash,
         )
         self.session.add(payment_record)
         await self.session.flush()
 
         return payment_record
 
-    async def update(self, payment_schema: PaymentReadSchema) -> Payment | None:
+    async def update(self, payment_schema: PaymentMessageSchema) -> Payment | None:
         query = select(Payment).where(Payment.id == payment_schema.id)
         result = await self.session.execute(query)
         payment_record = result.scalar_one_or_none()

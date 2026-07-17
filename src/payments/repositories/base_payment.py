@@ -1,10 +1,9 @@
-import decimal
 import uuid
 from abc import ABC, abstractmethod
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from payments.dtos.payment import PaymentReadSchema
+from payments.dtos.payment import PaymentCreateDTO, PaymentMessageSchema
 from payments.models.payment import Payment
 
 
@@ -13,14 +12,11 @@ class BasePaymentRepository(ABC):
         self.session = session
 
     @abstractmethod
-    async def create(
-        self, price: decimal.Decimal, currency: str, description: str, meta_data: dict, webhook_url: str,
-        idempotency_key: str, request_payload_hash: str
-    ) -> Payment:
+    async def create(self, dto: PaymentCreateDTO) -> Payment:
         pass
 
     @abstractmethod
-    async def update(self, payment_schema: PaymentReadSchema) -> Payment | None:
+    async def update(self, payment_schema: PaymentMessageSchema) -> Payment | None:
         pass
 
     @abstractmethod

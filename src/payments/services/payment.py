@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from payments.utils import hash_request_payload
-from payments.dtos.payment import PaymentReadSchema
+from payments.dtos.payment import PaymentCreateDTO, PaymentMessageSchema, PaymentReadSchema
 from payments.exceptions import IdempotencyKeyException
 from payments.repositories.base_outbox import BaseOutboxRepository
 from payments.repositories.base_payment import BasePaymentRepository
@@ -34,18 +34,19 @@ class PaymentService:
             return existing_payment, False
 
         try:
-            payment_orm = await self.payment_repository.create(
-                request_data.price,
-                request_data.currency,
-                request_data.description,
-                request_data.meta_data,
-                request_data.webhook_url,
-                idempotency_key,
-                request_payload_hash
+            dto = PaymentCreateDTO(
+                price=request_data.price,
+                currency=request_data.currency,
+                description=request_data.description,
+                meta_data=request_data.meta_data,
+                webhook_url=request_data.webhook_url,
+                idempotency_key=idempotency_key,
+                request_payload_hash=request_payload_hash,
             )
+            payment_orm = await self.payment_repository.create(dto)
             payment = PaymentReadSchema.model_validate(payment_orm)
 
-            await self.outbox_repository.create(payment)
+            await self.outbox_repository.create(PaymentMessageSchema.model_validate(payment_orm))
 
             response_data = PaymentResponseSchema.model_validate({
                 "payment_id": payment.id,
@@ -75,7 +76,7 @@ class PaymentService:
         payment_orm = await self.payment_repository.get_by_idempotency_key(idempotency_key)
         return PaymentReadSchema.model_validate(payment_orm) if payment_orm else None
 
-    async def update(self, payment_schema: PaymentReadSchema) -> PaymentReadSchema | None:
+    async def update(self, payment_schema: PaymentMessageSchema) -> PaymentReadSchema | None:
         try:
             payment_orm = await self.payment_repository.update(payment_schema)
 

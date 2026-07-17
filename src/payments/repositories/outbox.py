@@ -9,7 +9,7 @@ from sqlalchemy import select
 from core.settings import settings
 from payments.constants import ROUTING_KEY_PAYMENT_CREATED
 from payments.dtos.outbox import OutboxReadSchema
-from payments.dtos.payment import PaymentReadSchema
+from payments.dtos.payment import PaymentMessageSchema
 from payments.models import Outbox
 from payments.repositories.base_outbox import BaseOutboxRepository
 
@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 class OutboxRepository(BaseOutboxRepository):
-    async def create(self, payment_schema: PaymentReadSchema) -> OutboxReadSchema:
+    async def create(self, payment: PaymentMessageSchema) -> OutboxReadSchema:
         outbox_record = Outbox(
             event_type=ROUTING_KEY_PAYMENT_CREATED,
             aggregate_type="Payment",
-            aggregate_id=payment_schema.id,
-            payload=payment_schema.model_dump(mode="json")
+            aggregate_id=payment.id,
+            payload=payment.model_dump(mode="json")
         )
         self.session.add(outbox_record)
         await self.session.flush()

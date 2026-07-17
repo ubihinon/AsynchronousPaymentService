@@ -2,10 +2,10 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import List
 
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from payments.dtos.outbox import OutboxReadSchema
+from payments.dtos.payment import PaymentMessageSchema
 
 
 class BaseOutboxRepository(ABC):
@@ -13,7 +13,7 @@ class BaseOutboxRepository(ABC):
         self.session = session
 
     @abstractmethod
-    async def create(self, schema: BaseModel) -> OutboxReadSchema:
+    async def create(self, payment: PaymentMessageSchema) -> OutboxReadSchema:
         pass
 
     @abstractmethod
