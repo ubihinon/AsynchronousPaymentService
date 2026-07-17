@@ -28,7 +28,7 @@ payment_retry_10s_queue = RabbitQueue(
 
 payments_dead_queue = RabbitQueue(
     # name="payment.events.dead",
-    name="payment.dead.queue",
+    name="payment.failed",
     routing_key="payment.failed",
     durable=True,
 )
