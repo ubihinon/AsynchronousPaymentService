@@ -1,34 +1,31 @@
 from faststream.rabbit import RabbitQueue
 
-from payments.constants import PAYMENTS_QUEUE
+from payments.constants import PAYMENTS_QUEUE, ROUTING_KEY_PAYMENT_CREATED, ROUTING_KEY_PAYMENT_FAILED, ROUTING_KEY_PAYMENT_RETRY
+from core.rabbitmq.events import payment_exchange, payment_retry_exchange
 
 payments_queue = RabbitQueue(
     name=PAYMENTS_QUEUE,
-    routing_key="payment.created",
+    routing_key=ROUTING_KEY_PAYMENT_CREATED,
     durable=True,
     arguments={
-        "x-dead-letter-exchange": "payment.events.retry",
-        "x-dead-letter-routing-key": "payment.events.retry.3s",
-        # "x-dead-letter-exchange": "payment.events.dlx",
-        # "x-dead-letter-routing-key": "payment.failed",
+        "x-dead-letter-exchange": payment_retry_exchange.name,
+        "x-dead-letter-routing-key": ROUTING_KEY_PAYMENT_RETRY,
     }
 )
 
-payment_retry_10s_queue = RabbitQueue(
-    name="payment.events.retry.3s",
+payment_retry_3s_queue = RabbitQueue(
+    name=ROUTING_KEY_PAYMENT_RETRY,
     durable=True,
-    routing_key="payment.events.retry.3s",
+    routing_key=ROUTING_KEY_PAYMENT_RETRY,
     arguments={
-        # "x-message-ttl": 10000,
         "x-message-ttl": 3000,
-        "x-dead-letter-exchange": "payment.events",
-        "x-dead-letter-routing-key": "payment.created",
+        "x-dead-letter-exchange": payment_exchange.name,
+        "x-dead-letter-routing-key": ROUTING_KEY_PAYMENT_CREATED,
     },
 )
 
-payments_dead_queue = RabbitQueue(
-    # name="payment.events.dead",
-    name="payment.failed",
-    routing_key="payment.failed",
+payment_dead_queue = RabbitQueue(
+    name=ROUTING_KEY_PAYMENT_FAILED,
+    routing_key=ROUTING_KEY_PAYMENT_FAILED,
     durable=True,
 )

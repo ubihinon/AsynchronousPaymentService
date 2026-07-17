@@ -1,5 +1,7 @@
 from faststream.rabbit import ExchangeType, RabbitExchange
 
+from payments.constants import ROUTING_KEY_PAYMENT_FAILED
+
 payment_exchange = RabbitExchange(
     name="payment.events",
     type=ExchangeType.TOPIC,
@@ -13,7 +15,7 @@ payment_retry_exchange = RabbitExchange(
 )
 
 payment_dlx = RabbitExchange(
-    name="payment.events.dlx",
+    name=ROUTING_KEY_PAYMENT_FAILED,
     type=ExchangeType.DIRECT,
     durable=True,
 )

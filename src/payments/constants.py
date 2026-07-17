@@ -12,4 +12,6 @@ class PaymentStatus(str, enum.Enum):
     FAILED = "FAILED"
 
 PAYMENTS_QUEUE = "payments.new"
-PAYMENTS_EVENT = "payment.created"
+ROUTING_KEY_PAYMENT_CREATED = "payment.created"
+ROUTING_KEY_PAYMENT_RETRY = "payment.retry"
+ROUTING_KEY_PAYMENT_FAILED = "payment.failed"

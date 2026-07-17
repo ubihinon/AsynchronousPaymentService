@@ -22,9 +22,10 @@ class Settings(BaseSettings):
     RABBITMQ_PORT: int = 5672
     RABBITMQ_USER: str = "guest"
     RABBITMQ_PASS: str = "guest"
-    # RABBITMQ_URL: str = f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/"
 
     OUTBOX_LIMIT: int = 10
+
+    RABBITMQ_MAX_RETRIES = 3
 
     WEBHOOK_RETRY_ATTEMPTS: int = 3
     WEBHOOK_TIMEOUT_SECONDS: int | float = 5

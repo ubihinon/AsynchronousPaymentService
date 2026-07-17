@@ -10,8 +10,8 @@ from core.broker import broker
 from core.database import async_session
 from core.rabbitmq.events import payment_dlx, payment_exchange
 from core.logger_setup import setup_logging
-from core.rabbitmq.queues import payments_dead_queue, payments_queue
-from payments.constants import PAYMENTS_QUEUE, PaymentStatus
+from core.rabbitmq.queues import payment_dead_queue, payments_queue
+from payments.constants import PAYMENTS_QUEUE, ROUTING_KEY_PAYMENT_FAILED, PaymentStatus
 from payments.dtos.payment import PaymentReadSchema
 from payments.repositories import OutboxRepository, PaymentRepository
 from payments.services.payment import PaymentService
@@ -74,7 +74,7 @@ async def handle_payment(payload: PaymentReadSchema, msg: RabbitMessage):
             await broker.publish(
                 payload,
                 exchange=payment_dlx,
-                routing_key="payment.failed",
+                routing_key=ROUTING_KEY_PAYMENT_FAILED,
                 headers={"x-error": str(e), "x-failed-at": datetime.datetime.now().isoformat()}
             )
             await msg.ack()
@@ -92,7 +92,7 @@ def get_retry_count(msg: RabbitMessage) -> int:
 
 
 @broker.subscriber(
-    queue=payments_dead_queue,
+    queue=payment_dead_queue,
     exchange=payment_dlx,
 )
 async def process_dead_message(payload: PaymentReadSchema):

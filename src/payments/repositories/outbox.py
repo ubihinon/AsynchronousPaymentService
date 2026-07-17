@@ -7,7 +7,7 @@ from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import select
 
 from core.settings import settings
-from payments.constants import PAYMENTS_EVENT
+from payments.constants import ROUTING_KEY_PAYMENT_CREATED
 from payments.dtos.outbox import OutboxReadSchema
 from payments.dtos.payment import PaymentReadSchema
 from payments.models import Outbox
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class OutboxRepository(BaseOutboxRepository):
     async def create(self, payment_schema: PaymentReadSchema) -> OutboxReadSchema:
         outbox_record = Outbox(
-            event_type=PAYMENTS_EVENT,
+            event_type=ROUTING_KEY_PAYMENT_CREATED,
             aggregate_type="Payment",
             aggregate_id=payment_schema.id,
             payload=payment_schema.model_dump(mode="json")
